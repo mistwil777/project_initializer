@@ -1,0 +1,7 @@
+virtualenv
+# Pour Windows
+pywin32
+winshell
+
+# Pour tous les systèmes
+Pillow  # Pour le traitement des images (icône)
