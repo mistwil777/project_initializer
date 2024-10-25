@@ -27,24 +27,28 @@ class ProjectInitializerGUI:
         self.create_widgets()
 
     def create_widgets(self):
-        # Création des widgets de l'interface utilisateur
+        # Nom du projet
         tk.Label(self.window, text="Nom du projet:").grid(row=0, column=0, sticky="w", padx=5, pady=5)
         tk.Entry(self.window, textvariable=self.project_name, width=40).grid(row=0, column=1, columnspan=2, padx=5, pady=5)
 
+        # Chemin du projet
         tk.Label(self.window, text="Chemin du projet:").grid(row=1, column=0, sticky="w", padx=5, pady=5)
         tk.Entry(self.window, textvariable=self.project_path, width=40).grid(row=1, column=1, padx=5, pady=5)
         tk.Button(self.window, text="Parcourir", command=self.browse_path).grid(row=1, column=2, padx=5, pady=5)
 
+        # Sélection du domaine
         tk.Label(self.window, text="Domaine:").grid(row=2, column=0, sticky="w", padx=5, pady=5)
         domains = ["Data Science", "Cybersecurity", "Full Stack"]
         domain_dropdown = ttk.Combobox(self.window, textvariable=self.selected_domain, values=domains, state="readonly")
         domain_dropdown.grid(row=2, column=1, padx=5, pady=5)
         domain_dropdown.bind("<<ComboboxSelected>>", self.update_libraries)
 
+        # Bibliothèques
         tk.Label(self.window, text="Bibliothèques:").grid(row=3, column=0, sticky="nw", padx=5, pady=5)
         self.libraries_frame = tk.Frame(self.window)
         self.libraries_frame.grid(row=3, column=1, columnspan=2, sticky="nsew", padx=5, pady=5)
 
+        # Bouton de création de projet
         tk.Button(self.window, text="Créer le projet", command=self.create_project).grid(row=4, column=1, pady=10)
 
     def browse_path(self):
@@ -90,60 +94,50 @@ class ProjectInitializerGUI:
                 "xgboost", "lightgbm", "catboost"
             ]
         elif domain == "Cybersecurity":
-            return ["scapy", "pycryptodome"]
+            return ["scapy", "pycryptodome", "paramiko", "pyopenssl"]
         elif domain == "Full Stack":
-            return ["django", "flask"]
+            return ["django", "flask", "fastapi", "sqlalchemy"]
+        return []
 
     def create_project(self):
-       name = self.project_name.get()
-       path = self.project_path.get()
-       domain = self.selected_domain.get()
-       selected_libraries = [lib for lib in self.libraries if self.libraries[lib].get()]
+        name = self.project_name.get()
+        path = self.project_path.get()
+        domain = self.selected_domain.get()
+        selected_libraries = [lib for lib, var in self.libraries.items() if var.get()]
 
-       if not name or not path or not domain:
-           messagebox.showerror("Erreur", "Le nom du projet et le chemin sont requis!")
-           return
+        if not name or not path or not domain:
+            messagebox.showerror("Erreur", "Le nom du projet, le chemin et le domaine sont requis!")
+            return
 
-       progress_window = tk.Toplevel(self.window)
-       progress_window.title("Création du projet")
-       progress_window.geometry("300x100")
+        progress_window = tk.Toplevel(self.window)
+        progress_window.title("Création du projet")
+        progress_window.geometry("300x100")
 
-       label = tk.Label(progress_window,text="Création en cours...")
-       label.pack(pady=(20))
+        label = tk.Label(progress_window, text="Création en cours...")
+        label.pack(pady=20)
 
-       progress_bar = ttk.Progressbar(progress_window,
-                                      mode='indeterminate')
-       progress_bar.pack(pady=(10))
-       progress_bar.start()
+        progress_bar = ttk.Progressbar(progress_window, mode='indeterminate')
+        progress_bar.pack(pady=10)
+        progress_bar.start()
 
-       def create_project_thread():
-           try:
-               create_project(name,path,
-                              domain,
-                              selected_libraries)
-               self.window.after(0,
-                                 lambda:self.show_success(progress_window))
-           except Exception as e:
-               self.window.after(0,
-                                 lambda:self.show_error(str(e),
-                                                        progress_window))
+        def create_project_thread():
+            try:
+                create_project(name, path, domain, selected_libraries)
+                self.window.after(0, lambda: self.show_success(progress_window))
+            except Exception as e:
+                self.window.after(0, lambda: self.show_error(str(e), progress_window))
 
-       threading.Thread(target=create_project_thread,
-                        daemon=True).start()
+        threading.Thread(target=create_project_thread, daemon=True).start()
 
-    def show_success(self,
-                     progress_window):
-       progress_window.destroy()
-       messagebox.showinfo("Succès",
-                           f"Projet '{self.project_name.get()}' créé avec succès!")
+    def show_success(self, progress_window):
+        progress_window.destroy()
+        messagebox.showinfo("Succès", f"Projet '{self.project_name.get()}' créé avec succès!")
+        self.window.quit()
+        self.window.destroy()
 
-    def show_error(self,
-                   error_message,
-                   progress_window):
-       progress_window.destroy()
-       messagebox.showerror("Erreur",
-                            error_message)
+    def show_error(self, error_message, progress_window):
+        progress_window.destroy()
+        messagebox.showerror("Erreur", error_message)
 
     def run(self):
-       # Démarre la boucle principale de l'application
-       self.window.mainloop()
+        self.window.mainloop()
